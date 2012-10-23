@@ -95,6 +95,14 @@ mn.rad <- mn.rad[keepLat]
 
 names(mn.rad) <- uid
 
+qRad <- sapply(mn.rad, function(x){x$extCoord$mnDist})
+qLat <- sapply(mn.rad, function(x){x$extCoord$mnLoc["lat"]})
+qLat <- round(qLat, 5)
+qLong <- sapply(mn.rad, function(x){x$extCoord$mnLoc["long"]})
+qLong <- round(qLong, 5)
+
+locData <- data.frame(uid=uid, qRad=sapply(mn.rad, function(x){}))
+
 useKey <- scan("googlemapsapi.key", what="character")
 
 tmpLoc <- mn.rad[[1]]
