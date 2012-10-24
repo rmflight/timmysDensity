@@ -56,7 +56,7 @@ getMnDist <- function(inLocFeature){
 
 calcRad <- function(inCoord){
 	# first convert degrees to radians
-	radCoord <- (pi/180) * tmpCoord
+	radCoord <- (pi/180) * inCoord
 	
 	earthRad <- 6353 # note this is in km
 	
@@ -77,20 +77,20 @@ calcRad <- function(inCoord){
 }
 
 mn.rad <- lapply(locFeatures, getMnDist)
+uid <- sapply(locFeatures, function(x){x$uid})
+names(mn.rad) <- uid
 
 .sessionInfo <- sessionInfo()
 .timeDate <- Sys.time()
 save(mn.rad, .sessionInfo, .timeDate, file="loc.radius.RData")
 
 # now get IDs, and chop out anything above 54 deg latitude
-uid <- sapply(locFeatures, function(x){x$uid})
 allLat <- sapply(mn.rad, function(x){
 	x$extCoord$mnLoc["lat"]
 })
 
 keepLat <- allLat <= 53.4
 
-uid <- uid[keepLat]
 mn.rad <- mn.rad[keepLat]
 
 names(mn.rad) <- uid
@@ -101,7 +101,12 @@ qLat <- round(qLat, 5)
 qLong <- sapply(mn.rad, function(x){x$extCoord$mnLoc["long"]})
 qLong <- round(qLong, 5)
 
-locData <- data.frame(uid=uid, qRad=sapply(mn.rad, function(x){}))
+qStr <- paste(qLat, qLong, sep=",")
+blockAss <- rep(seq(1,53), 1000)
+
+locData <- data.frame(uid=uid, qRad=qRad, qLat=qLat, qLong=qLong, qString=qStr, block=blockAss, isDone=FALSE, timLocs="")
+
+write.table(locData, file="censusDisseminationLocData.txt", sep="\t", row.names=F)
 
 useKey <- scan("googlemapsapi.key", what="character")
 
