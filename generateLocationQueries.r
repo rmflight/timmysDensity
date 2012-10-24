@@ -1,7 +1,8 @@
 require(XML)
 gsmXML <- xmlParse("disseminationAreaLocations.gml")
 
-
+# takes a set of tuples of latitude / longitude coordinates as a string, and generates a matrix where
+# column 1 is latitude and column 2 is longitude
 coordConvert <- function(inCoord){
 	splitUp <- strsplit(inCoord, " ")[[1]]
 	nCoor <- length(splitUp)
@@ -11,6 +12,8 @@ coordConvert <- function(inCoord){
 	return(cbind(lat, long))
 }
 
+# extracts the various pieces of ID and location data from the gml file for census dissemination locations
+# inNodeSet: an XML GML featureMember node, that has DAUID, and exterior and interior descriptions of area
 extractData <- function(inNodeSet){
 	uid <- xpathSApply(inNodeSet, "*/fme:DAUID", namespaces=xmlNamespaceDefinitions(gsmXML, simplify=T), xmlValue)
 	
@@ -30,6 +33,7 @@ extractData <- function(inNodeSet){
 	
 }
 
+# actually run the extraction on each featureMember node
 locFeatures <- xpathApply(gsmXML, "//gml:featureMember", extractData)
 
 .timeDate <- Sys.time()
@@ -40,6 +44,8 @@ save(locFeatures, .timeDate, .sessionInfo, file="disseminationAreasLoc.RData")
 
 require(plyr)
 
+# want to check for the presence of each different type of geo feature, and then run the mean and distance calculations
+# on it.
 getMnDist <- function(inLocFeature){
 	extMnRad <- list()
 	intMnRad <- list()
@@ -54,6 +60,12 @@ getMnDist <- function(inLocFeature){
 	return(list(extCoord=extMnRad, intCoord=intMnRad))
 }
 
+
+# calculate the mean location of the points, and the radius from the mean
+# based on a matrix of input coordinates, with the first column being latitude
+# and the second column being longitude
+#
+# inCoord: matrix of two columns, first column is latitude, second column is longitude
 calcRad <- function(inCoord){
 	# first convert degrees to radians
 	radCoord <- (pi/180) * inCoord
