@@ -1,16 +1,11 @@
 require(XML)
 
+apiStr <- "https://maps.googleapis.com/maps/api/place/search/xml?"
+srchStr <- "&types=food&name=tim%20%hortons&sensor=false"
+
 testNone <- data.frame(uid=1, qRad=248, qString="46.10416,-64.81636")
 testSome <- data.frame(uid=1, qRad=1000, qString="44.640811,-63.574705")
 testMulti <- data.frame(uid=1, qRad=5000, qString="44.640811,-63.574705")
-
-useKey <- scan("googlemapsapi.key", what="character")
-locData <- read.table("censusDisseminationLocData.txt", sep="\t", stringsAsFactors=F, header=T)
-useBlock <- 1
-
-waitPeriod <- 24 * 60 * 60 # total time allowed for queries
-maxQuery <- 1000
-blockData <- locData[(locData$block == useBlock),]
 
 searchLoc <- function(inSearch){
 
@@ -37,14 +32,26 @@ searchLoc <- function(inSearch){
 	}
 }
 
-inLoc <- testMulti
+
+
+# runBlock: query an entire block of data
+runBlock <- function(blockIndex, keyFile="googlemapsapi.key", inFile="censusDisseminationLocData.txt", waitTime=24*60*60, maxEntry=1000){
+	
+}
+
+
+## Testing functions
+runTests <- function(){
+	inLoc <- testNone
+}
+# inLoc <- testNone
 
 inRad <- round(inLoc$qRad, 0)
 radStr <- paste("&radius=", inRad, sep="", collapse="")
 
-apiStr <- "https://maps.googleapis.com/maps/api/place/search/xml?"
+
 locStr <- paste("location=", inLoc$qString, sep="", collapse="")
-srchStr <- "&types=food&name=tim%20%hortons&sensor=false"
+
 keyStr <- paste("&key=", useKey, sep="", collapse="")
 
 qStr <- paste(apiStr, locStr, radStr, srchStr, keyStr, sep="", collapse="")
