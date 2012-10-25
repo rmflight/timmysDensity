@@ -14,7 +14,7 @@ searchLoc <- function(inSearch, currCount=1){
 	tmpXML <- download.file(inSearch, "tmpdat.xml")
 	qDat <- xmlParse("tmpdat.xml")
 	
-	outLoc <- NULL
+	outLoc <- ""
 	currCount <- currCount + 1
 	
 	xmlStatus <- xpathSApply(qDat, "/PlaceSearchResponse/status", xmlValue)
@@ -41,13 +41,14 @@ searchLoc <- function(inSearch, currCount=1){
 checkTime <- function(startTime, maxTime, currCount, maxCount){
 	currDiff <- difftime(now(), startTime, units="secs")
 	
-	if ((currCount >= maxCount) & (currDif <= maxTime)){
+	if ((currCount >= maxCount) & (currDiff <= maxTime)){
 		nextDate <- startTime + maxTime
 		diffNext <- difftime(nextDate, now(), units="secs")
 		Sys.sleep(diffNext)
 		currCount <- 0
+		startTime <- now()
 	}
-	return(currCount)
+	return(list(sTime=startTime, count=currCount))
 }
 
 # runBlock: query an entire block of data
@@ -56,24 +57,33 @@ runBlock <- function(blockIndex, keyFile="googlemapsapi.key", inFile="censusDiss
 	locData <- read.table(inFile, sep="\t", header=T, stringsAsFactors=F)
 	
 	useKey <- scan(keyFile, "character")
+	keyStr <- paste("&key=", useKey, sep="", collapse="")
 	
 	nBlock <- length(blockIndex)
-	getCount <- 1
+	getCount <- 0 # keeps track of how many files we have downloaded, ie how many queries did we make on the server
+	startTime <- now() # when are we starting, want to know because we can only make 1000 queries in 24 hours
 	
 	for (iBlock in 1:nBlock){
 		locBloc <- which(locData$block == blockIndex[iBlock])
 		isFalse <- locBloc[which(!(locData[locBloc, "isDone"]))]
 		if (length(isFalse) > 0){
-			startTime <- Sys.time()
-			
+						
 			for (iFalse in isFalse){
 				
 				inLoc <- locData[iFalse,]
 				locStr <- paste("location=", inLoc$qString, sep="", collapse="")
-				keyStr <- paste("&key=", useKey, sep="", collapse="")
+				radStr <- paste("&radius=", round(inLoc$qRad), sep="", collapse="")
 				qStr <- paste(apiStr, locStr, radStr, srchStr, keyStr, sep="", collapse="")
-				resultLocNone <- searchLoc(qStr)
-				locData[iFalse, "timLocs"] <- result
+				resultLoc <- searchLoc(qStr, getCount)
+				locData[iFalse, "timLocs"] <- resultLoc$outLoc
+				locData[iFalse, "isDone"] <- TRUE
+				getCount <- resultLoc$count
+				
+				write.table(locData, file=inFile, row.names=F, col.names=T, sep="\t")
+				
+				checkRes <- checkTime(startTime, waitTime, getCount, maxEntry)
+				getCount <- checkRes$count
+				startTime <- checkRes$sTime
 			}
 			
 		}
@@ -87,7 +97,7 @@ runTests <- function(){
 	useKey <- scan("googlemapsapi.key", "character")
 	inLoc <- testNone
 	locStr <- paste("location=", inLoc$qString, sep="", collapse="")
-	radStr <- paste("&radius=", inLoc$qRad, sep="", collapse="")
+	radStr <- paste("&radius=", round(inLoc$qRad), sep="", collapse="")
 	keyStr <- paste("&key=", useKey, sep="", collapse="")
 	qStr <- paste(apiStr, locStr, radStr, srchStr, keyStr, sep="", collapse="")
 	resultLocNone <- searchLoc(qStr)
@@ -108,13 +118,9 @@ runTests <- function(){
 }
 # inLoc <- testNone
 
+runQueryTest <- function(){
+	runBlock(1, keyFile="googlemapsapi.key", inFile="censusDisseminationLocData.txt", waitTime=60, maxEntry=10)
+}
+	
 
 
-
-locStr <- paste("location=", inLoc$qString, sep="", collapse="")
-
-keyStr <- paste("&key=", useKey, sep="", collapse="")
-
-qStr <- paste(apiStr, locStr, radStr, srchStr, keyStr, sep="", collapse="")
-
-resultLoc <- searchLoc(qStr)
