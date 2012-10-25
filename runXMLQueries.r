@@ -87,13 +87,14 @@ runBlock <- function(blockIndex, keyFile="googlemapsapi.key", inFile="censusDiss
 				resultLoc <- searchLoc(qStr, getCount, allCount)
 				locData[iFalse, "timLocs"] <- resultLoc$outLoc
 				locData[iFalse, "isDone"] <- TRUE
+				locData[iFalse, "wasParse"] <- resultLoc$isParse
 				getCount <- resultLoc$count
 				
 				write.table(locData, file=inFile, row.names=F, col.names=T, sep="\t")
 				
 				allCount <- resultLoc$allCount
-				print(allCount)
-				print(getCount)
+				# print(allCount)
+				# print(getCount)
 				if (allCount >= maxQueryAll){
 					stop("Exceeded total allowed queries!")
 				}
