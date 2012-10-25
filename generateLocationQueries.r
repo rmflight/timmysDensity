@@ -117,4 +117,7 @@ blockAss <- blockAss[1:length(qLong)]
 
 locData <- data.frame(uid=names(mn.rad), qRad=qRad, qLat=qLat, qLong=qLong, qString=qStr, block=blockAss, isDone=FALSE, timLocs="")
 
+locData <- locData[(order(locData$block)),]
+locData$qRad[(locData$qRad > 50000)] <- 50000
+
 write.table(locData, file="censusDisseminationLocData.txt", sep="\t", row.names=F, col.names=T)
