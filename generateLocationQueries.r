@@ -115,7 +115,7 @@ qStr <- paste(qLat, qLong, sep=",")
 blockAss <- rep(seq(1,53), 1000)
 blockAss <- blockAss[1:length(qLong)]
 
-locData <- data.frame(uid=names(mn.rad), qRad=qRad, qLat=qLat, qLong=qLong, qString=qStr, block=blockAss, isDone=FALSE, timLocs="")
+locData <- data.frame(uid=names(mn.rad), qRad=qRad, qLat=qLat, qLong=qLong, qString=qStr, block=blockAss, isDone=FALSE, timLocs="", wasParsed=FALSE)
 
 locData <- locData[(order(locData$block)),]
 locData$qRad[(locData$qRad > 50000)] <- 50000
