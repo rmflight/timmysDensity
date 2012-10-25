@@ -12,12 +12,10 @@ waitPeriod <- 24 * 60 * 60 # total time allowed for queries
 maxQuery <- 1000
 blockData <- locData[(locData$block == useBlock),]
 
+searchLoc <- function(inSearch){
 
-searchLoc <- function(keyStr, locStr, srchStr){
-
-	constQ <- paste(apiStr, locStr, radStr, srchStr, keyStr, sep="", collapse="")
-	
-	tmpXML <- download.file(constQ, "tmpdat.xml")
+	start.time <- Sys.time()
+	tmpXML <- download.file(inSearch, "tmpdat.xml")
 	qDat <- xmlParse("tmpdat.xml")
 	
 	xmlStatus <- xpathSApply(qDat, "/PlaceSearchResponse/status", xmlValue)
@@ -29,8 +27,9 @@ searchLoc <- function(keyStr, locStr, srchStr){
 		
 		xmlNext <- xpathSApply(qDat, "/PlaceSearchResponse/next_page_token", xmlValue)
 		if (length(xmlNext) == 1){
-			locStr <- paste("pagetoken=", xmlNext, sep="", collapse="")
-			newLoc <- searchLoc(keyStr, locStr, srchStr="")
+			qStr2 <- paste(inSearch, "&pagetoken=", xmlNext, sep="", collapse="")
+			Sys.sleep(5) # wait for the token to become valid
+			newLoc <- searchLoc(qStr2)
 			outLoc <- paste(outLoc, newLoc, sep="", collapse=":")
 		}
 		
@@ -48,4 +47,6 @@ locStr <- paste("location=", inLoc$qString, sep="", collapse="")
 srchStr <- "&types=food&name=tim%20%hortons&sensor=false"
 keyStr <- paste("&key=", useKey, sep="", collapse="")
 
-resultLoc <- searchLoc(keyStr, locStr, srchStr)
+qStr <- paste(apiStr, locStr, radStr, srchStr, keyStr, sep="", collapse="")
+
+resultLoc <- searchLoc(qStr)
