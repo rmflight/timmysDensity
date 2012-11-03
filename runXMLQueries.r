@@ -12,10 +12,8 @@ testMulti <- data.frame(uid=1, qRad=5000, qString="44.640811,-63.574705")
 
 # takes an querystring, parses it, and returns the latitudes and longitudes 
 # inSearch: the query string to use
-# currCount: a counter for the number of queries performed in the alloted time
-# allCount: the total number of queries that have been performed
-searchLoc <- function(inSearch, currCount=0, allCount=0){
-
+searchLoc <- function(inSearch){
+  outLoc <- "" #default to return
 	start.time <- now()
 	tmpJSON <- getURL(inSearch, timeout=4, ssl.verifypeer=F)
   jsonDat <- fromJSON(tmpJSON)
@@ -28,38 +26,10 @@ searchLoc <- function(inSearch, currCount=0, allCount=0){
         outLoc <- paste(outLat, outLong, sep=",", collapse=",")
       } 
     })
+    outLoc <- paste(results, sep="", collapse=":")
   } 
   
-	parsedDat <- FALSE
-	
-	if ((length(tmpXML) > 0) && (substring(tmpXML, 1, 5) == "<?xml")){
-		qDat <- xmlParse(tmpXML)
-		
-		outLoc <- ""
-		currCount <- currCount + 1
-		allCount <- allCount + 1
-		xmlStatus <- xpathSApply(qDat, "/PlaceSearchResponse/status", xmlValue)
-		
-		if (xmlStatus[1] == "OK"){
-			outLat <- xpathSApply(qDat, "//lat", xmlValue)
-			outLong <- xpathSApply(qDat, "//lng", xmlValue)
-			outLoc <- paste(outLat, outLong, sep=",", collapse=":")
-			
-			xmlNext <- xpathSApply(qDat, "/PlaceSearchResponse/next_page_token", xmlValue)
-			if (length(xmlNext) == 1){
-				qStr2 <- paste(inSearch, "&pagetoken=", xmlNext, sep="", collapse="")
-				Sys.sleep(5) # wait for the token to become valid
-				newLoc <- searchLoc(qStr2, currCount)
-				outLoc <- paste(outLoc, newLoc$outLoc, sep="", collapse=":")
-				currCount <- newLoc$count
-				allCount <- allCount$allCount
-			}
-			
-			
-		}
-		parsedDat <- TRUE
-	}
-	return(list(outLoc=outLoc, count=currCount, allCount=allCount, isParse=parsedDat))
+  return(outLoc)
 }
 
 # checks if you have gone over the number of queries in the allotted time, and if so, forces a sleep until the time
@@ -90,7 +60,7 @@ checkTime <- function(startTime, maxTime, currCount, maxCount){
 # waitTime: how long to wait before processing the next set of data
 # maxEntryTime: how many entries can be processed within "waitTime"
 # maxQueryAll: how many total queries you want to perform
-runBlock <- function(blockIndex, idFile="clientid.txt", secretFile="clientsecret.txt", inFile="censusDisseminationLocData.txt", waitTime=24*60*60, maxEntryTime=1000, maxQueryAll=Inf){
+runBlock <- function(blockIndex, idFile="clientid.txt", secretFile="clientsecret.txt", inFile="censusDisseminationLocData.txt", waitTime=60*60, maxEntryTime=5000, maxQueryAll=Inf){
 	stopifnot(is.numeric(blockIndex), file.exists(idFile), file.exists(secretFile), file.exists(inFile), is.numeric(waitTime), is.numeric(maxEntryTime))
 	locData <- read.table(inFile, sep="\t", header=T, stringsAsFactors=F)
 	
@@ -116,10 +86,10 @@ runBlock <- function(blockIndex, idFile="clientid.txt", secretFile="clientsecret
 				locStr <- paste("ll=", inLoc$qString, "" sep="", collapse="")
 				#radStr <- paste("&radius=", round(inLoc$qRad), sep="", collapse="")
 				qStr <- paste(apiStr, locStr, srchStr, clientStr, sep="", collapse="")
-				resultLoc <- searchLoc(qStr, getCount, allCount)
-				locData[iFalse, "timLocs"] <- resultLoc$outLoc
+				resultLoc <- searchLoc(qStr)
+				locData[iFalse, "timLocs"] <- resultLoc
 				locData[iFalse, "isDone"] <- TRUE
-				locData[iFalse, "wasParse"] <- resultLoc$isParse
+				# locData[iFalse, "wasParse"] <- resultLoc$isParse
 				getCount <- resultLoc$count
 				
 				write.table(locData, file=inFile, row.names=F, col.names=T, sep="\t")
