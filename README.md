@@ -21,6 +21,9 @@ http://en.wikipedia.org/wiki/Geographical_distance
 
 https://developers.google.com/places/documentation/search
 
+## Foursquare
+
+After asking for help on Reddit, someone suggested using the Foursquare API. I will probably try both Google and Foursquare on a couple of different blocks and see if the overall results are that different. Foursquare allows up to 5000 queries an hour, versus 1000 for Google in 24.
 
 # Contributing
 
