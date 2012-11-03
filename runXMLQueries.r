@@ -1,9 +1,9 @@
-require(XML)
 require(RCurl)
+require(RJSONIO)
 require(lubridate)
 
-apiStr <- "https://maps.googleapis.com/maps/api/place/search/xml?"
-srchStr <- "&types=food&name=tim%20%hortons&sensor=false"
+apiStr <- "https://api.foursquare.com/v2/venues/search?"
+srchStr <- "&query=tim%20hortons&limit=50"
 
 testNone <- data.frame(uid=1, qRad=248, qString="46.10416,-64.81636")
 testSome <- data.frame(uid=1, qRad=1000, qString="44.640811,-63.574705")
@@ -17,7 +17,19 @@ testMulti <- data.frame(uid=1, qRad=5000, qString="44.640811,-63.574705")
 searchLoc <- function(inSearch, currCount=0, allCount=0){
 
 	start.time <- now()
-	tmpXML <- getURL(inSearch, timeout=4, ssl.verifypeer=F)
+	tmpJSON <- getURL(inSearch, timeout=4, ssl.verifypeer=F)
+  jsonDat <- fromJSON(tmpJSON)
+  
+  if (jsonDat$meta == 200){
+    results <- sapply(jsonDat$response$venues, function(inResponse){
+      if (length(grep("Tim Hortons", inResponse$name)) > 0){
+        outLong <- inResponse$location$lng
+        outLat <- inResponse$location$lat
+        outLoc <- paste(outLat, outLong, sep=",", collapse=",")
+      } 
+    })
+  } 
+  
 	parsedDat <- FALSE
 	
 	if ((length(tmpXML) > 0) && (substring(tmpXML, 1, 5) == "<?xml")){
@@ -78,12 +90,14 @@ checkTime <- function(startTime, maxTime, currCount, maxCount){
 # waitTime: how long to wait before processing the next set of data
 # maxEntryTime: how many entries can be processed within "waitTime"
 # maxQueryAll: how many total queries you want to perform
-runBlock <- function(blockIndex, keyFile="googlemapsapi.key", inFile="censusDisseminationLocData.txt", waitTime=24*60*60, maxEntryTime=1000, maxQueryAll=Inf){
-	stopifnot(is.numeric(blockIndex), file.exists(keyFile), file.exists(inFile), is.numeric(waitTime), is.numeric(maxEntryTime))
+runBlock <- function(blockIndex, idFile="clientid.txt", secretFile="clientsecret.txt", inFile="censusDisseminationLocData.txt", waitTime=24*60*60, maxEntryTime=1000, maxQueryAll=Inf){
+	stopifnot(is.numeric(blockIndex), file.exists(idFile), file.exists(secretFile), file.exists(inFile), is.numeric(waitTime), is.numeric(maxEntryTime))
 	locData <- read.table(inFile, sep="\t", header=T, stringsAsFactors=F)
 	
-	useKey <- scan(keyFile, "character")
-	keyStr <- paste("&key=", useKey, sep="", collapse="")
+	useid <- scan(idFile, "character")
+  useSecret <- scan(secretFile, "character")
+  clientStr <- paste("&client_id=", useid, "&client_secret=", useSecret, "&v=", as.character(now(), format="%Y%m%d"), sep="", collapse="")
+	
 	
 	nBlock <- length(blockIndex)
 	getCount <- 0 # keeps track of how many files we have downloaded, ie how many queries did we make on the server
@@ -99,9 +113,9 @@ runBlock <- function(blockIndex, keyFile="googlemapsapi.key", inFile="censusDiss
 			for (iFalse in isFalse){
 				
 				inLoc <- locData[iFalse,]
-				locStr <- paste("location=", inLoc$qString, sep="", collapse="")
-				radStr <- paste("&radius=", round(inLoc$qRad), sep="", collapse="")
-				qStr <- paste(apiStr, locStr, radStr, srchStr, keyStr, sep="", collapse="")
+				locStr <- paste("ll=", inLoc$qString, "" sep="", collapse="")
+				#radStr <- paste("&radius=", round(inLoc$qRad), sep="", collapse="")
+				qStr <- paste(apiStr, locStr, srchStr, clientStr, sep="", collapse="")
 				resultLoc <- searchLoc(qStr, getCount, allCount)
 				locData[iFalse, "timLocs"] <- resultLoc$outLoc
 				locData[iFalse, "isDone"] <- TRUE
@@ -130,12 +144,12 @@ runBlock <- function(blockIndex, keyFile="googlemapsapi.key", inFile="censusDiss
 
 ## Testing functions
 runTests <- function(){
-	useKey <- scan("googlemapsapi.key", "character")
+  useid <- scan("clientid.txt", "character")
+  useSecret <- scan("clientsecret.txt", "character")
+  clientStr <- paste("&client_id=", useid, "&client_secret=", useSecret, "&v=", as.character(now(), format="%Y%m%d"), sep="", collapse="")
 	inLoc <- testNone
-	locStr <- paste("location=", inLoc$qString, sep="", collapse="")
-	radStr <- paste("&radius=", round(inLoc$qRad), sep="", collapse="")
-	keyStr <- paste("&key=", useKey, sep="", collapse="")
-	qStr <- paste(apiStr, locStr, radStr, srchStr, keyStr, sep="", collapse="")
+	locStr <- paste("ll=", inLoc$qString, sep="", collapse="")
+	qStr <- paste(apiStr, locStr, srchStr, clientStr, sep="", collapse="")
 	resultLocNone <- searchLoc(qStr)
 	
 	inLoc <- testSome
