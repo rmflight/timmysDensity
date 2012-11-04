@@ -140,7 +140,7 @@ runQueryTest <- function(){
 }
 	
 t1 <- now()
-runBlock(1, idFile="clientid.txt", secretFile="clientsecret.txt", inFile="censusDisseminationLocData.txt", maxQueryAll=40)
+runBlock(1, idFile="clientid.txt", secretFile="clientsecret.txt", inFile="censusDisseminationLocData.txt", maxQueryAll=300)
 t2 <- now()
 tDiff <- difftime(t2,t1,units="s")
 
