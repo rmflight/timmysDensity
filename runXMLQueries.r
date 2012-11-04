@@ -15,20 +15,20 @@ testMulti <- data.frame(uid=1, qRad=5000, qString="44.640811,-63.574705")
 searchLoc <- function(inSearch){
   outLoc <- "" #default to return
 	start.time <- now()
-	tmpJSON <- getURL(inSearch, timeout=4, ssl.verifypeer=F)
-  jsonDat <- fromJSON(tmpJSON)
-  
-  if (jsonDat$meta == 200){
-    results <- sapply(jsonDat$response$venues, function(inResponse){
-      if (length(grep("Tim Hortons", inResponse$name)) > 0){
-        outLong <- inResponse$location$lng
-        outLat <- inResponse$location$lat
-        outLoc <- paste(outLat, outLong, sep=",", collapse=",")
-      } 
-    })
-    outLoc <- paste(results, sep="", collapse=":")
-  } 
-  
+	
+  try({tmpJSON <- getURL(inSearch, timeout=4, ssl.verifypeer=F)
+       jsonDat <- fromJSON(tmpJSON)
+       if (jsonDat$meta == 200){
+         results <- sapply(jsonDat$response$venues, function(inResponse){
+           if (length(grep("Tim Hortons", inResponse$name)) > 0){
+             outLong <- inResponse$location$lng
+             outLat <- inResponse$location$lat
+             outLoc <- paste(outLat, outLong, sep=",", collapse=",")
+           } 
+         })
+         outLoc <- paste(results, sep="", collapse=":")
+       }})
+    
   return(outLoc)
 }
 
@@ -83,22 +83,21 @@ runBlock <- function(blockIndex, idFile="clientid.txt", secretFile="clientsecret
 			for (iFalse in isFalse){
 				
 				inLoc <- locData[iFalse,]
-				locStr <- paste("ll=", inLoc$qString, "" sep="", collapse="")
+				locStr <- paste("ll=", inLoc$qString, sep="", collapse="")
 				#radStr <- paste("&radius=", round(inLoc$qRad), sep="", collapse="")
 				qStr <- paste(apiStr, locStr, srchStr, clientStr, sep="", collapse="")
 				resultLoc <- searchLoc(qStr)
 				locData[iFalse, "timLocs"] <- resultLoc
 				locData[iFalse, "isDone"] <- TRUE
 				# locData[iFalse, "wasParse"] <- resultLoc$isParse
-				getCount <- resultLoc$count
-				
+				getCount <- getCount + 1
+				allCount <- allCount + 1
 				write.table(locData, file=inFile, row.names=F, col.names=T, sep="\t")
 				
-				allCount <- resultLoc$allCount
 				# print(allCount)
 				# print(getCount)
 				if (allCount >= maxQueryAll){
-					stop("Exceeded total allowed queries!")
+					return("Exceeded total allowed queries!")
 				}
 				
 				checkRes <- checkTime(startTime, waitTime, getCount, maxEntryTime)
@@ -123,24 +122,25 @@ runTests <- function(){
 	resultLocNone <- searchLoc(qStr)
 	
 	inLoc <- testSome
-	locStr <- paste("location=", inLoc$qString, sep="", collapse="")
-	radStr <- paste("&radius=", inLoc$qRad, sep="", collapse="")
-	keyStr <- paste("&key=", useKey, sep="", collapse="")
-	qStr <- paste(apiStr, locStr, radStr, srchStr, keyStr, sep="", collapse="")
+  clientStr <- paste("&client_id=", useid, "&client_secret=", useSecret, "&v=", as.character(now(), format="%Y%m%d"), sep="", collapse="")
+  locStr <- paste("ll=", inLoc$qString, sep="", collapse="")
+  qStr <- paste(apiStr, locStr, srchStr, clientStr, sep="", collapse="")
 	resultLocSome <- searchLoc(qStr)
 	
 	inLoc <- testMulti
-	locStr <- paste("location=", inLoc$qString, sep="", collapse="")
-	radStr <- paste("&radius=", inLoc$qRad, sep="", collapse="")
-	keyStr <- paste("&key=", useKey, sep="", collapse="")
-	qStr <- paste(apiStr, locStr, radStr, srchStr, keyStr, sep="", collapse="")
+  clientStr <- paste("&client_id=", useid, "&client_secret=", useSecret, "&v=", as.character(now(), format="%Y%m%d"), sep="", collapse="")
+  locStr <- paste("ll=", inLoc$qString, sep="", collapse="")
+  qStr <- paste(apiStr, locStr, srchStr, clientStr, sep="", collapse="")
 	resultLocMulti <- searchLoc(qStr, 0)
 }
 # inLoc <- testNone
 
 runQueryTest <- function(){
-	runBlock(1, keyFile="googlemapsapi.key", inFile="censusDisseminationLocData.txt", waitTime=60, maxEntryTime=10, maxQueryAll=20)
+  runBlock(1, idFile="clientid.txt", secretFile="clientsecret.txt", inFile="censusDisseminationLocData.txt", waitTime=60, maxEntryTime=10, maxQueryAll=20)
 }
 	
-
+t1 <- now()
+runBlock(1, idFile="clientid.txt", secretFile="clientsecret.txt", inFile="censusDisseminationLocData.txt", maxQueryAll=40)
+t2 <- now()
+tDiff <- difftime(t2,t1,units="s")
 
