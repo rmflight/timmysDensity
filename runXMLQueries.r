@@ -52,15 +52,15 @@ checkTime <- function(startTime, maxTime, currCount, maxCount){
 	return(list(sTime=startTime, count=currCount))
 }
 
-# runBlock: query an entire block of data
-# This takes which blocks you want to work on
+# runQueries: query a bunch of data
+# This takes which locatoins you want to work on
 # blockIndex: which blocks of data to process
 # keyFile: the file that has your google places api key
 # inFile: what file has the tab delimited data to process
 # waitTime: how long to wait before processing the next set of data
 # maxEntryTime: how many entries can be processed within "waitTime"
 # maxQueryAll: how many total queries you want to perform
-runBlock <- function(blockIndex, idFile="clientid.txt", secretFile="clientsecret.txt", inFile="censusDisseminationLocData.txt", waitTime=60*60, maxEntryTime=5000, maxQueryAll=Inf){
+runQueries <- function(queryIndex, idFile="clientid.txt", secretFile="clientsecret.txt", inFile="censusDisseminationLocData.txt", waitTime=60*60, maxEntryTime=5000, maxQueryAll=Inf){
 	stopifnot(is.numeric(blockIndex), file.exists(idFile), file.exists(secretFile), file.exists(inFile), is.numeric(waitTime), is.numeric(maxEntryTime))
 	locData <- read.table(inFile, sep="\t", header=T, stringsAsFactors=F)
 	
