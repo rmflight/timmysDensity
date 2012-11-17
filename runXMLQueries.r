@@ -87,6 +87,7 @@ runQueries <- function(queryIndex, idFile="clientid.txt", secretFile="clientsecr
       }
       
     })
+    allCount <<- allCount + length(inIndx)
     getCount <<- length(inIndx) + getCount
     checkRes <- checkTime(startTime, waitTime, getCount, maxEntryTime)
     getCount <<- checkRes$count
@@ -123,11 +124,11 @@ runTests <- function(){
 # inLoc <- testNone
 
 runQueryTest <- function(){
-  runBlock(1, idFile="clientid.txt", secretFile="clientsecret.txt", inFile="censusDisseminationLocData.txt", waitTime=60, maxEntryTime=10, maxQueryAll=20)
+  runQueries(seq(1,100), idFile="clientid.txt", secretFile="clientsecret.txt", inFile="censusDisseminationLocData.txt", outFile="timmysLocs.txt", waitTime=60*60, maxEntryTime=5000, checkTime=100)
 }
 	
 t1 <- now()
-runBlock(1, idFile="clientid.txt", secretFile="clientsecret.txt", inFile="censusDisseminationLocData.txt", maxQueryAll=300)
+runQueries(seq(1,300), idFile="clientid.txt", secretFile="clientsecret.txt", inFile="censusDisseminationLocData.txt", outFile="timmysLocs.txt", waitTime=60*60, maxEntryTime=5000, checkTime=100)
 t2 <- now()
 tDiff <- difftime(t2,t1,units="s")
 
