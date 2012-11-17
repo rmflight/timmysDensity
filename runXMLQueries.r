@@ -20,11 +20,10 @@ searchLoc <- function(inSearch){
        jsonDat <- fromJSON(tmpJSON)
        if (jsonDat$meta == 200){
          results <- sapply(jsonDat$response$venues, function(inResponse){
-           if (length(grep("Tim Hortons", inResponse$name)) > 0){
-             outLong <- inResponse$location$lng
-             outLat <- inResponse$location$lat
-             outLoc <- paste(outLat, outLong, sep=",", collapse=",")
-           } 
+           outName <- inResponse$name
+           outLong <- inResponse$location$lng
+           outLat <- inResponse$location$lat
+           outLoc <- paste(outName, outLat, outLong, sep=":", collapse=":")
          })
          outLoc <- results
        }})
@@ -83,7 +82,9 @@ runQueries <- function(queryIndex, idFile="clientid.txt", secretFile="clientsecr
       qStr <- paste(apiStr, locStr, srchStr, clientStr, sep="", collapse="")
       resultLoc <- searchLoc(qStr)
       if (nchar(resultLoc) > 0){
-        cat(resultLoc, sep="\n", file=outFile, append=T)
+        tryCatch(cat(resultLoc, sep="\n", file=outFile, append=T),
+                 error= print(qStr))
+        
       }
       
     })
@@ -128,7 +129,7 @@ runQueryTest <- function(){
 }
 	
 t1 <- now()
-runQueries(seq(1,300), idFile="clientid.txt", secretFile="clientsecret.txt", inFile="censusDisseminationLocData.txt", outFile="timmysLocs.txt", waitTime=60*60, maxEntryTime=5000, checkTime=100)
+runQueries(seq(200,250), idFile="clientid.txt", secretFile="clientsecret.txt", inFile="censusDisseminationLocData.txt", outFile="timmysLocs.txt", waitTime=60*60, maxEntryTime=5000, checkTime=50)
 t2 <- now()
 tDiff <- difftime(t2,t1,units="s")
 
