@@ -26,7 +26,7 @@ searchLoc <- function(inSearch){
              outLoc <- paste(outLat, outLong, sep=",", collapse=",")
            } 
          })
-         outLoc <- paste(results, sep="", collapse=":")
+         outLoc <- results
        }})
     
   return(outLoc)
@@ -60,8 +60,8 @@ checkTime <- function(startTime, maxTime, currCount, maxCount){
 # waitTime: how long to wait before processing the next set of data
 # maxEntryTime: how many entries can be processed within "waitTime"
 # maxQueryAll: how many total queries you want to perform
-runQueries <- function(queryIndex, idFile="clientid.txt", secretFile="clientsecret.txt", inFile="censusDisseminationLocData.txt", waitTime=60*60, maxEntryTime=5000, maxQueryAll=Inf){
-	stopifnot(is.numeric(blockIndex), file.exists(idFile), file.exists(secretFile), file.exists(inFile), is.numeric(waitTime), is.numeric(maxEntryTime))
+runQueries <- function(queryIndex, idFile="clientid.txt", secretFile="clientsecret.txt", inFile="censusDisseminationLocData.txt", outFile="timmysLocs.txt", waitTime=60*60, maxEntryTime=5000, checkTime=100){
+	stopifnot(is.numeric(queryIndex), file.exists(idFile), file.exists(secretFile), file.exists(inFile), is.numeric(waitTime), is.numeric(maxEntryTime))
 	locData <- read.table(inFile, sep="\t", header=T, stringsAsFactors=F)
 	
 	useid <- scan(idFile, "character")
@@ -69,44 +69,31 @@ runQueries <- function(queryIndex, idFile="clientid.txt", secretFile="clientsecr
   clientStr <- paste("&client_id=", useid, "&client_secret=", useSecret, "&v=", as.character(now(), format="%Y%m%d"), sep="", collapse="")
 	
 	
-	nBlock <- length(blockIndex)
+	nQuery <- length(queryIndex)
 	getCount <- 0 # keeps track of how many files we have downloaded, ie how many queries did we make on the server
 	allCount <- 0
 	startTime <- now() # when are we starting, want to know because we can only make 1000 queries in 24 hours
 	
+  useSplit <- seq(1, length(queryIndex) / checkTime)
+  splitIndx <- split(queryIndex, rep(useSplit, length(queryIndex) / length(useSplit)))
+  
+  sapply(splitIndx, function(inIndx){
+    sapply(locData$qString[inIndx], function(useLoc){
+      locStr <- paste("ll=", useLoc, sep="", collapse="")
+      qStr <- paste(apiStr, locStr, srchStr, clientStr, sep="", collapse="")
+      resultLoc <- searchLoc(qStr)
+      if (nchar(resultLoc) > 0){
+        cat(resultLoc, sep="\n", file=outFile, append=T)
+      }
+      
+    })
+    getCount <<- length(inIndx) + getCount
+    checkRes <- checkTime(startTime, waitTime, getCount, maxEntryTime)
+    getCount <<- checkRes$count
+    startTime <<- checkRes$sTime
+  })
 	
-	for (iBlock in 1:nBlock){
-		locBloc <- which(locData$block == blockIndex[iBlock])
-		isFalse <- locBloc[which(!(locData[locBloc, "isDone"]))]
-		if (length(isFalse) > 0){
-						
-			for (iFalse in isFalse){
-				
-				inLoc <- locData[iFalse,]
-				locStr <- paste("ll=", inLoc$qString, sep="", collapse="")
-				#radStr <- paste("&radius=", round(inLoc$qRad), sep="", collapse="")
-				qStr <- paste(apiStr, locStr, srchStr, clientStr, sep="", collapse="")
-				resultLoc <- searchLoc(qStr)
-				locData[iFalse, "timLocs"] <- resultLoc
-				locData[iFalse, "isDone"] <- TRUE
-				# locData[iFalse, "wasParse"] <- resultLoc$isParse
-				getCount <- getCount + 1
-				allCount <- allCount + 1
-				write.table(locData, file=inFile, row.names=F, col.names=T, sep="\t")
-				
-				# print(allCount)
-				# print(getCount)
-				if (allCount >= maxQueryAll){
-					return("Exceeded total allowed queries!")
-				}
-				
-				checkRes <- checkTime(startTime, waitTime, getCount, maxEntryTime)
-				getCount <- checkRes$count
-				startTime <- checkRes$sTime
-			}
-			
-		}
-	}
+	
 	
 }
 
