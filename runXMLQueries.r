@@ -81,10 +81,8 @@ runQueries <- function(queryIndex, idFile="clientid.txt", secretFile="clientsecr
       locStr <- paste("ll=", useLoc, sep="", collapse="")
       qStr <- paste(apiStr, locStr, srchStr, clientStr, sep="", collapse="")
       resultLoc <- searchLoc(qStr)
-      if (nchar(resultLoc) > 0){
-        tryCatch(cat(resultLoc, sep="\n", file=outFile, append=T),
-                 error= print(qStr))
-        
+      if (length(resultLoc > 0) & (nchar(resultLoc[1]) > 0)){
+        cat(resultLoc, sep="\n", file=outFile, append=T)
       }
       
     })
@@ -94,9 +92,6 @@ runQueries <- function(queryIndex, idFile="clientid.txt", secretFile="clientsecr
     getCount <<- checkRes$count
     startTime <<- checkRes$sTime
   })
-	
-	
-	
 }
 
 
@@ -127,9 +122,11 @@ runTests <- function(){
 runQueryTest <- function(){
   runQueries(seq(1,100), idFile="clientid.txt", secretFile="clientsecret.txt", inFile="censusDisseminationLocData.txt", outFile="timmysLocs.txt", waitTime=60*60, maxEntryTime=5000, checkTime=100)
 }
-	
-t1 <- now()
-runQueries(seq(200,250), idFile="clientid.txt", secretFile="clientsecret.txt", inFile="censusDisseminationLocData.txt", outFile="timmysLocs.txt", waitTime=60*60, maxEntryTime=5000, checkTime=50)
-t2 <- now()
-tDiff <- difftime(t2,t1,units="s")
 
+runTimeTest <- function(){
+  t1 <- now()
+  runQueries(seq(1,300), idFile="clientid.txt", secretFile="clientsecret.txt", inFile="censusDisseminationLocData.txt", outFile="timmysLocs.txt", waitTime=60*60, maxEntryTime=5000, checkTime=100)
+  t2 <- now()
+  tDiff <- difftime(t2,t1,units="s")
+  tDiff / 300
+}
