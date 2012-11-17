@@ -94,6 +94,12 @@ runQueries <- function(queryIndex, idFile="clientid.txt", secretFile="clientsecr
   })
 }
 
+cleanUpResults <- function(inLocFile="timmysLocs.txt"){
+  stopifnot(file.exists(inLocFile))
+  allLocs <- scan(inLocFile, what=character())
+  allLocs <- unique(allLocs)
+  cat(allLocs, file=inLocFile, sep="\n", append=F)
+}
 
 ## Testing functions
 runTests <- function(){
