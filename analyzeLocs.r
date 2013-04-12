@@ -49,3 +49,7 @@ load("disseminationAreasLoc.RData")
 # In addition, using the centers, and population counts, we should be able to come up with some meaure of 
 # how far away someone is from a Tim Hortons, and even come up with a distance for the closest Tim Horton's
 # to come up with the minimum distance.
+censusLocs <- read.table("censusDisseminationLocData.txt", sep="\t", header=T)
+load("censusTotals.RData")
+
+# calculate distances between every tims and every center of each census tract
