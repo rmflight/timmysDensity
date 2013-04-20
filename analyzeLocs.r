@@ -28,11 +28,11 @@ canada <- map_data("world", "canada")
 
 p <- ggplot(legend=FALSE) +
   geom_polygon( data=canada, aes(x=long, y=lat,group=group)) +
-  opts(panel.background = theme_blank()) +
-  opts(panel.grid.major = theme_blank()) +
-  opts(panel.grid.minor = theme_blank()) +
-  opts(axis.text.x = theme_blank(),axis.text.y = theme_blank()) +
-  opts(axis.ticks = theme_blank()) +
+  theme(panel.background = element_blank()) +
+  theme(panel.grid.major = element_blank()) +
+  theme(panel.grid.minor = element_blank()) +
+  theme(axis.text.x = element_blank(),axis.text.y = element_blank()) +
+  theme(axis.ticks = element_blank()) +
   xlab("") + ylab("")
 
 sp <- locData[1, c("lat", "long")]
@@ -53,3 +53,11 @@ censusLocs <- read.table("censusDisseminationLocData.txt", sep="\t", header=T)
 load("censusTotals.RData")
 
 # calculate distances between every tims and every center of each census tract
+require(geosphere)
+
+queryLocs <- matrix(c(locData$long, locData$lat), nrow=nrow(locData), ncol=2, byrow=F) # these are the tims locations
+distLocs <- matrix(c(censusLocs$qLong, censusLocs$qLat), nrow=nrow(censusLocs), ncol=2, byrow=F) # the census centers
+
+allDists <- apply(queryLocs, 1, function(x){
+  distHaversine(x, distLocs) / 1000
+})
