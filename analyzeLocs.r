@@ -58,6 +58,22 @@ require(geosphere)
 queryLocs <- matrix(c(locData$long, locData$lat), nrow=nrow(locData), ncol=2, byrow=F) # these are the tims locations
 distLocs <- matrix(c(censusLocs$qLong, censusLocs$qLat), nrow=nrow(censusLocs), ncol=2, byrow=F) # the census centers
 
+# for each of the Tims Locations in "locData", calculate the distances to all of the centers of the census tracts.
+
 allDists <- apply(queryLocs, 1, function(x){
   distHaversine(x, distLocs) / 1000
 })
+
+# Now for all the Tims locations, get total population within that distance, and then divide over the total population of Canada.
+
+totPopulation <- sum(locTotal, na.rm=T)
+
+lessDist <- seq(0, 200, 0.1)
+
+percPop <- sapply(lessDist, function(inDist){
+  isLess <- allDists < inDist
+  anyLess <- apply(isLess, 1, function(x){sum(x) > 0})
+  sum(locTotal[anyLess], na.rm=T) / totPopulation * 100
+})
+
+plot(lessDist, percPop, xlim=c(0, 2))
