@@ -70,6 +70,16 @@ totPopulation <- sum(locTotal, na.rm=T)
 
 lessDist <- seq(0, 200, 0.1)
 
+sumLessDist <- function(inDist){
+  isLess <- allDists < inDist
+  anyLess <- rowsum(isLess) > 0
+  useTotal <- locTotal[anyLess]
+}
+
+crapFun <- function(x){
+  sum(x) > 0
+}
+
 percPop <- sapply(lessDist, function(inDist){
   isLess <- allDists < inDist
   anyLess <- apply(isLess, 1, function(x){sum(x) > 0})
@@ -77,3 +87,5 @@ percPop <- sapply(lessDist, function(inDist){
 })
 
 plot(lessDist, percPop, xlim=c(0, 2))
+
+save()
