@@ -66,26 +66,21 @@ allDists <- apply(queryLocs, 1, function(x){
 
 # Now for all the Tims locations, get total population within that distance, and then divide over the total population of Canada.
 
+keepTotal <- censusID %in% censusLocs$uid
+locTotal <- locTotal[keepTotal]
 totPopulation <- sum(locTotal, na.rm=T)
 
-lessDist <- seq(0, 200, 0.1)
+lessDist <- seq(0, 200, 1)
 
 sumLessDist <- function(inDist){
   isLess <- allDists < inDist
-  anyLess <- rowsum(isLess) > 0
-  useTotal <- locTotal[anyLess]
-}
-
-crapFun <- function(x){
-  sum(x) > 0
-}
-
-percPop <- sapply(lessDist, function(inDist){
-  isLess <- allDists < inDist
-  anyLess <- apply(isLess, 1, function(x){sum(x) > 0})
+  nLess <- apply(isLess, 1, sum)
+  anyLess <- nLess > 0
   sum(locTotal[anyLess], na.rm=T) / totPopulation * 100
-})
+}
+
+percPop <- sapply(lessDist, sumLessDist)
+save(percPop, lessDist, file="distancePercentages.RData")
 
 plot(lessDist, percPop, xlim=c(0, 2))
 
-save()
