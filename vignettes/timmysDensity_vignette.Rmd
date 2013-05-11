@@ -1,3 +1,8 @@
+<!--
+%\VignetteEngine{knitr}
+%\VignetteIndexEntry{Tim Horton's Density in Canada}
+-->
+
 # Tim Hortons Density
 
 Inspired by this [post](), I wanted to examine the locations and density of Tim Hortons restaurants in Canada.

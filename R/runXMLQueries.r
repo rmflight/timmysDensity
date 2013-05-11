@@ -10,8 +10,8 @@ testSome <- data.frame(uid=1, qRad=1000, qString="44.640811,-63.574705")
 testMulti <- data.frame(uid=1, qRad=5000, qString="44.640811,-63.574705")
 
 
-# takes an querystring, parses it, and returns the latitudes and longitudes 
-# inSearch: the query string to use
+#' takes an querystring, parses it, and returns the latitudes and longitudes 
+#' @param inSearch the query string to use
 searchLoc <- function(inSearch){
   outLoc <- "" #default to return
 	start.time <- now()
@@ -31,12 +31,16 @@ searchLoc <- function(inSearch){
   return(outLoc)
 }
 
-# checks if you have gone over the number of queries in the allotted time, and if so, forces a sleep until the time
-# is up
-# startTime: when did you start your calculations
-# maxTime: how much time allowed for the set number of queries
-# currCount: which query are you on
-# maxCount: how many queries allowed in the allotted time
+#' checks if you have gone over the number of queries in the allotted time, and if so, forces a sleep until the time is up
+#' @param startTime when did you start your calculations
+#' @param maxTime how much time allowed for the set number of queries
+#' @param currCount which query are you on
+#' @param maxCount how many queries allowed in the allotted time
+#' @return list contianing:
+#' \itemList{
+#'   \item{sTime: }{the start time of the queries}
+#'   \item{count: }{the current count}
+#' }
 checkTime <- function(startTime, maxTime, currCount, maxCount){
 	currDiff <- difftime(now(), startTime, units="secs")
 	
@@ -51,14 +55,14 @@ checkTime <- function(startTime, maxTime, currCount, maxCount){
 	return(list(sTime=startTime, count=currCount))
 }
 
-# runQueries: query a bunch of data
-# This takes which locatoins you want to work on
-# blockIndex: which blocks of data to process
-# keyFile: the file that has your google places api key
-# inFile: what file has the tab delimited data to process
-# waitTime: how long to wait before processing the next set of data
-# maxEntryTime: how many entries can be processed within "waitTime"
-# maxQueryAll: how many total queries you want to perform
+
+#' query a bunch of data
+#' @param blockIndex which blocks of data to process
+#' @param keyFile the file that has your google places api key
+#' @param inFile what file has the tab delimited data to process
+#' @param waitTime how long to wait before processing the next set of data
+#' @param maxEntryTime how many entries can be processed within "waitTime"
+#' @param maxQueryAll how many total queries you want to perform
 runQueries <- function(queryIndex, idFile="clientid.txt", secretFile="clientsecret.txt", inFile="censusDisseminationLocData.txt", outFile="timmysLocs.txt", waitTime=60*60, maxEntryTime=5000, checkTime=100){
 	stopifnot(is.numeric(queryIndex), file.exists(idFile), file.exists(secretFile), file.exists(inFile), is.numeric(waitTime), is.numeric(maxEntryTime))
 	locData <- read.table(inFile, sep="\t", header=T, stringsAsFactors=F)
@@ -94,6 +98,9 @@ runQueries <- function(queryIndex, idFile="clientid.txt", secretFile="clientsecr
   })
 }
 
+#' cleanup the results to make sure only unique results
+#' @param inLocFile the file with the locations
+#' @details takes a file containing the Tims locations, and makes sure that only unique entries are in the file. As a side effect, simply writes the data back to the same file.
 cleanUpResults <- function(inLocFile="timmysLocs.txt"){
   stopifnot(file.exists(inLocFile))
   allLocs <- scan(inLocFile, what=character(), sep="\n")
@@ -101,7 +108,7 @@ cleanUpResults <- function(inLocFile="timmysLocs.txt"){
   cat(allLocs, file=inLocFile, sep="\n", append=F)
 }
 
-## Testing functions
+#' run some simple tests
 runTests <- function(){
   useid <- scan("clientid.txt", "character")
   useSecret <- scan("clientsecret.txt", "character")
@@ -123,7 +130,7 @@ runTests <- function(){
   qStr <- paste(apiStr, locStr, srchStr, clientStr, sep="", collapse="")
 	resultLocMulti <- searchLoc(qStr, 0)
 }
-# inLoc <- testNone
+
 
 runQueryTest <- function(){
   runQueries(seq(1,100), idFile="clientid.txt", secretFile="clientsecret.txt", inFile="censusDisseminationLocData.txt", outFile="timmysLocs.txt", waitTime=60*60, maxEntryTime=5000, checkTime=100)
