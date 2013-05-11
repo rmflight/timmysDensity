@@ -1,6 +1,0 @@
-https://maps.googleapis.com/maps/api/place/search/json?location=-33.8670522,151.1957362&radius=500&types=food&name=harbour&sensor=false&key=
-
-https://maps.googleapis.com/maps/api/place/search/xml?location=53.54335,-109.4685&radius=500&types=food&name=tim%20%hortons&sensor=false&key=
-
-
-https://maps.googleapis.com/maps/api/place/search/xml?location=46.10416,-64.81636&radius=5000&types=food&name=tim%20%hortons&sensor=false&key=
