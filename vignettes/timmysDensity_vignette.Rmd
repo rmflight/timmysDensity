@@ -5,4 +5,6 @@
 
 # Tim Hortons Density
 
-Inspired by this [post](), I wanted to examine the locations and density of Tim Hortons restaurants in Canada.
+Inspired by this [post](), I wanted to examine the locations and density of Tim Hortons restaurants in Canada. Using Stats Canada data, each census tract is queried on Foursquare for Tims locations.
+
+The actual Statistics Canada data at the dissemination block level can be downloaded from [here](http://www12.statcan.gc.ca/census-recensement/2011/geo/ref/att-eng.cfm). The census dissemination block boundary file was downloaded from [here](http://www12.statcan.gc.ca/census-recensement/2011/geo/bound-limit/bound-limit-2011-eng.cfm), choosing the `gml` format, for dissemination areas and the cartographic boundary files.
