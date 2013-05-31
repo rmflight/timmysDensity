@@ -3,8 +3,63 @@
 %\VignetteIndexEntry{Tim Horton's Density in Canada}
 -->
 
+```{r dataOpts}
+options(stringsAsFactors=F)
+require(plyr)
+```
+
+
 # Tim Hortons Density
 
 Inspired by this [post](), I wanted to examine the locations and density of Tim Hortons restaurants in Canada. Using Stats Canada data, each census tract is queried on Foursquare for Tims locations.
 
-The actual Statistics Canada data at the dissemination block level can be downloaded from [here](http://www12.statcan.gc.ca/census-recensement/2011/geo/ref/att-eng.cfm). The census dissemination block boundary file was downloaded from [here](http://www12.statcan.gc.ca/census-recensement/2011/geo/bound-limit/bound-limit-2011-eng.cfm), choosing the `gml` format, for dissemination areas and the cartographic boundary files.
+## Statistics Canada Census Data
+
+The actual Statistics Canada data at the dissemination block level can be downloaded from [here](http://www12.statcan.gc.ca/census-recensement/2011/geo/ref/att-eng.cfm). You will want to download the Excel format, read it, and then save it as either tab-delimited or CSV using a non-standard delimiter, I used a semi-colon (;).
+
+```{r loadCensusData}
+censusData <- read.table("../timmysData/2011_92-151_XBB_XLSX.csv", header=F, sep=";", quote="")
+censusData <- censusData[,1:17]
+names(censusData) <- c("DBuid", "DBpop2011", "DBtdwell2011", "DBurdwell2011", "DBarea", "DB_ir2011", "DAuid", "DAlamx", "DAlamy", "DAlat",
+                       "DAlong", "PRuid", "PRname", "PRename", "PRfname", "PReabbr", "PRfabbr")
+censusData$DBpop2011 <- as.numeric(censusData$DBpop2011)
+censusData$DBpop2011[is.na(censusData$DBpop2011)] <- 0
+
+censusData$DBtdwell2011 <- as.numeric(censusData$DBtdwell2011)
+censusData$DBtdwell2011[is.na(censusData$DBtdwell2011)] <- 0
+```
+
+From this data we get block level:
+
+  * populations (DBpop2011)
+  * total private dwellings (DBtdwell2011)
+  * privale dwellings occupied by usual residents (DBurdwell2011)
+  * block land area (DBarea)
+  * dissemination area id (DAuid)
+  * representative point x coordinate in Lambert projection (DAlamx)
+  * rep. point y coordinate in Lambert projection (DAlamy)
+  * rep. point latitude (DAlat)
+  * rep. point longitude (DAlong)
+  
+This should be everything we need to do the investigation we want.
+
+## Dissemination Area Long. and Lat.
+
+We need to find the unique dissemination areas, and get out their latitudes and longitudes for querying in other databases. Note that the longitude and latitude provided here actually are weighted representative locations based on population. However, given the size of them, I don't think using them will be a problem for `Foursquare`. Because areas are what we have location data for, we will summarize everything at the area level, summing the population counts for all the blocks within an area.
+
+```{r summarizeAreas}
+uniqAreas <- unique(censusData$DAuid)
+
+summarizeArea <- function(areaID){
+  areaData <- censusData[(censusData$DAuid == areaID),]
+  outData <- data.frame(uid=areaID, lamx=areaData[1,"DAlamx"], lamy=areaData[1,"DAlamy"], lat=areaData[1,"DAlat"], long=areaData[1,"DAlong"], pop=sum(areaData[,"DBpop2011"]), dwell=sum(areaData[,"DBtdwell2011"]))
+  return(outData)
+}
+areaData <- adply(uniqAreas, 1, summarizeArea)
+```
+
+
+
+The census dissemination block boundary file was downloaded from [here](http://www12.statcan.gc.ca/census-recensement/2011/geo/bound-limit/bound-limit-2011-eng.cfm), choosing the `gml` format, for dissemination areas and the cartographic boundary files.
+
+Other files: http://www.data.gc.ca/default.asp?lang=En&n=5175A6F0-1&xsl=datacataloguerecord&metaxsl=datacataloguerecord&formid=C87D5FDD-00E6-41A0-B5BA-E8E41B521ED0
