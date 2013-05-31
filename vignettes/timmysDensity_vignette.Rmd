@@ -15,7 +15,7 @@ Inspired by this [post](), I wanted to examine the locations and density of Tim 
 
 ## Statistics Canada Census Data
 
-The actual Statistics Canada data at the dissemination block level can be downloaded from [here](http://www12.statcan.gc.ca/census-recensement/2011/geo/ref/att-eng.cfm). You will want to download the Excel format, read it, and then save it as either tab-delimited or CSV using a non-standard delimiter, I used a semi-colon (;).
+The actual Statistics Canada data at the dissemination block level can be downloaded from [here](http://www.data.gc.ca/default.asp?lang=En&n=5175A6F0-1&xsl=datacataloguerecord&metaxsl=datacataloguerecord&formid=C87D5FDD-00E6-41A0-B5BA-E8E41B521ED0). You will want to download the Excel format, read it, and then save it as either tab-delimited or CSV using a non-standard delimiter, I used a semi-colon (;).
 
 ```{r loadCensusData}
 censusData <- read.table("../timmysData/2011_92-151_XBB_XLSX.csv", header=F, sep=";", quote="")
@@ -52,10 +52,14 @@ uniqAreas <- unique(censusData$DAuid)
 
 summarizeArea <- function(areaID){
   areaData <- censusData[(censusData$DAuid == areaID),]
-  outData <- data.frame(uid=areaID, lamx=areaData[1,"DAlamx"], lamy=areaData[1,"DAlamy"], lat=areaData[1,"DAlat"], long=areaData[1,"DAlong"], pop=sum(areaData[,"DBpop2011"]), dwell=sum(areaData[,"DBtdwell2011"]))
+  outData <- data.frame(uid=areaID, lamx=areaData[1,"DAlamx"], lamy=areaData[1,"DAlamy"], lat=areaData[1,"DAlat"], long=areaData[1,"DAlong"], pop=sum(areaData[,"DBpop2011"]), dwell=sum(areaData[,"DBtdwell2011"]), prov=areaData[1, "PRename"])
   return(outData)
 }
-areaData <- adply(uniqAreas, 1, summarizeArea)
+areaData <- adply(uniqAreas[1:5], 1, summarizeArea)
+.sessionInfo <- sessionInfo()
+.timedate <- Sys.time()
+write.table(areaData, file="inst/data/areaData.txt", sep="\t", row.names=F, col.names=T)
+save(areaData, .sessionInfo, .timedate, file="../timmysData/areaDataFile.RData")
 ```
 
 
