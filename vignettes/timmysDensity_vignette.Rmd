@@ -17,7 +17,7 @@ Inspired by this [post](), I wanted to examine the locations and density of Tim 
 
 The actual Statistics Canada data at the dissemination block level can be downloaded from [here](http://www.data.gc.ca/default.asp?lang=En&n=5175A6F0-1&xsl=datacataloguerecord&metaxsl=datacataloguerecord&formid=C87D5FDD-00E6-41A0-B5BA-E8E41B521ED0). You will want to download the Excel format, read it, and then save it as either tab-delimited or CSV using a non-standard delimiter, I used a semi-colon (;).
 
-```{r loadCensusData}
+```{r loadCensusData, eval=FALSE}
 censusData <- read.table("../timmysData/2011_92-151_XBB_XLSX.csv", header=F, sep=";", quote="")
 censusData <- censusData[,1:17]
 names(censusData) <- c("DBuid", "DBpop2011", "DBtdwell2011", "DBurdwell2011", "DBarea", "DB_ir2011", "DAuid", "DAlamx", "DAlamy", "DAlat",
@@ -47,7 +47,7 @@ This should be everything we need to do the investigation we want.
 
 We need to find the unique dissemination areas, and get out their latitudes and longitudes for querying in other databases. Note that the longitude and latitude provided here actually are weighted representative locations based on population. However, given the size of them, I don't think using them will be a problem for `Foursquare`. Because areas are what we have location data for, we will summarize everything at the area level, summing the population counts for all the blocks within an area.
 
-```{r summarizeAreas}
+```{r summarizeAreas, eval=FALSE}
 uniqAreas <- unique(censusData$DAuid)
 
 summarizeArea <- function(areaID){
@@ -62,8 +62,24 @@ write.table(areaData, file="inst/data/areaData.txt", sep="\t", row.names=F, col.
 save(areaData, .sessionInfo, .timedate, file="../timmysData/areaDataFile.RData")
 ```
 
+## Run queries on Foursquare
+
+### Load up the data and verify what we have.
+
+```{r generateQueries}
+load("../timmysData/areaDataFile.RData")
+head(areaData)
+```
 
 
-The census dissemination block boundary file was downloaded from [here](http://www12.statcan.gc.ca/census-recensement/2011/geo/bound-limit/bound-limit-2011-eng.cfm), choosing the `gml` format, for dissemination areas and the cartographic boundary files.
+### Generate queries and run
 
-Other files: http://www.data.gc.ca/default.asp?lang=En&n=5175A6F0-1&xsl=datacataloguerecord&metaxsl=datacataloguerecord&formid=C87D5FDD-00E6-41A0-B5BA-E8E41B521ED0
+For each dissemination area (DA), we are going to use as the location for the query the latitude and longitude of each DA, as well as the search string "tim horton". 
+
+Because Foursquare limits the number of userless requests to [5000 / hr](https://developer.foursquare.com/overview/ratelimits). To make sure we stay under this limit, we will divide up the data into **blocks** of 5000.
+
+```{r splitBlocks}
+totBlocks <- rep(seq(1, 5000, 1), 12)[seq(1, nrow(areaData), 1)]
+areaData$block <- totBlocks
+save(areaData, file="../timmysData/areaDataFile.RData")
+```
