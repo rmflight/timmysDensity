@@ -6,6 +6,7 @@
 ```{r dataOpts}
 options(stringsAsFactors=F)
 require(plyr)
+require(timmysDensity)
 ```
 
 
@@ -89,4 +90,29 @@ Due to the small size of the DAs, we have a lot of duplicate entries. Now lets r
 
 ```{r cleanup}
 cleanUpResults("../timmysData/timmysLocs2.txt")
+```
+
+
+### Visualize Locations
+
+```{r readTimsLocs}
+# read in and clean up the data
+timsLocs <- scan(file="../timmysData/timmysLocs2.txt", what=character(), sep="\n")
+timsLocs <- strsplit(timsLocs, ":")
+
+timsName <- sapply(timsLocs, function(x){x[1]})
+timsLat <- sapply(timsLocs, function(x){x[2]})
+timsLong <- sapply(timsLocs, function(x){x[3]})
+
+locData <- data.frame(description=timsName, lat=as.numeric(timsLat), long=as.numeric(timsLong))
+hasNA <- is.na(locData[,"lat"]) | is.na(locData[,"long"])
+locData <- locData[!(hasNA),]
+
+timsStr <- c("tim hortons", "tim horton's")
+
+hasTims <- (grepl(timsStr[1], locData$description, ignore.case=T)) | (grepl(timsStr[2], locData$description, ignore.case=T))
+
+locData <- locData[hasTims,]
+timsLocs <- locData
+rm(timsName, timsLat, timsLong, hasNA, locData, hasTims, timsStr)
 ```
