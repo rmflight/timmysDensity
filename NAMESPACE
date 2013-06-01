@@ -1,0 +1,5 @@
+export(cleanUpResults)
+export(runQueries)
+importFrom(lubridate,now)
+importFrom(RCurl,getURL)
+importFrom(RJSONIO,fromJSON)

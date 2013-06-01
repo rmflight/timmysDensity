@@ -27,10 +27,8 @@ searchLoc <- function(inSearch){
 #' @param currCount which query are you on
 #' @param maxCount how many queries allowed in the allotted time
 #' @return list contianing:
-#' \itemList{
-#'   \item{sTime: }{the start time of the queries}
-#'   \item{count: }{the current count}
-#' }
+#' \item{sTime: }{the start time of the queries}
+#' \item{count: }{the current count}
 #' @importFrom lubridate now
 checkTime <- function(startTime, maxTime, currCount, maxCount){
 	currDiff <- difftime(now(), startTime, units="secs")
@@ -60,7 +58,7 @@ checkTime <- function(startTime, maxTime, currCount, maxCount){
 #' @details expects \code{inData} to be a data frame with \code{lat}, \code{long}, and \code{block} numeric columns. \code{lat} and \code{long} are used as the locations to query foursquare, \code{block} controls
 #' @importFrom lubridate now
 runQueries <- function(inData, idFile="clientid.txt", secretFile="clientsecret.txt", outFile="timmysLocs.txt", waitTime=60*60, maxEntryTime=5000, checkTime=100){
-	stopifnot(is.numeric(queryIndex), file.exists(idFile), file.exists(secretFile), file.exists(inFile), is.numeric(waitTime), is.numeric(maxEntryTime))
+	stopifnot(is.data.frame(inData), file.exists(idFile), file.exists(secretFile), is.numeric(waitTime), is.numeric(maxEntryTime))
 	
   # foursquare api information
 	apiStr <- "https://api.foursquare.com/v2/venues/search?"
@@ -77,8 +75,8 @@ runQueries <- function(inData, idFile="clientid.txt", secretFile="clientsecret.t
 	allCount <- 0
 	startTime <- now() # when are we starting, want to know because we can only make so many queries in a particular time period
 	
-  useSplit <- seq(1, length(queryIndex) / checkTime)
-  splitIndx <- split(queryIndex, rep(useSplit, length(queryIndex) / length(useSplit)))
+  useSplit <- seq(1, nQuery / checkTime)
+  splitIndx <- split(seq(1, nQuery), rep(useSplit, nQuery / length(useSplit)))
   
   sapply(splitIndx, function(inIndx){
     sapply(inData$qString[inIndx], function(useLoc){
