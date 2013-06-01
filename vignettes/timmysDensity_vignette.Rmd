@@ -7,6 +7,9 @@
 options(stringsAsFactors=F)
 require(plyr)
 require(timmysDensity)
+require(maps)
+require(ggplot2)
+require(geosphere)
 ```
 
 
@@ -95,6 +98,8 @@ cleanUpResults("../timmysData/timmysLocs2.txt")
 
 ### Visualize Locations
 
+First lets read in the data and make sure that we have Tims locations.
+
 ```{r readTimsLocs}
 # read in and clean up the data
 timsLocs <- scan(file="../timmysData/timmysLocs2.txt", what=character(), sep="\n")
@@ -115,4 +120,26 @@ hasTims <- (grepl(timsStr[1], locData$description, ignore.case=T)) | (grepl(tims
 locData <- locData[hasTims,]
 timsLocs <- locData
 rm(timsName, timsLat, timsLong, hasNA, locData, hasTims, timsStr)
+```
+
+Lets actually put these on a map.
+
+```{r mapIt}
+canada <- map_data("world", "canada")
+
+p <- ggplot(legend=FALSE) +
+  geom_polygon( data=canada, aes(x=long, y=lat,group=group)) +
+  theme(panel.background = element_blank()) +
+  theme(panel.grid.major = element_blank()) +
+  theme(panel.grid.minor = element_blank()) +
+  theme(axis.text.x = element_blank(),axis.text.y = element_blank()) +
+  theme(axis.ticks = element_blank()) +
+  xlab("") + ylab("")
+
+sp <- timsLocs[1, c("lat", "long")]
+
+p2 <- p + geom_point(data=timsLocs[,c("lat", "long")], aes(x=long, y=lat), colour="green", size=1, alpha=0.5)
+
+print(p)
+print(p2)
 ```
