@@ -81,3 +81,12 @@ Because Foursquare limits the number of userless requests to [5000 / hr](https:/
 ```{r runQueries}
 runQueries(areaData, idFile="../timmysData/clientid.txt", secretFile="../timmysData/clientsecret.txt", outFile="../timmysData/timmysLocs2.txt")
 ```
+
+
+### Clean up the results
+
+Due to the small size of the DAs, we have a lot of duplicate entries. Now lets remove all the duplicate entries.
+
+```{r cleanup}
+cleanUpResults("../timmysData/timmysLocs2.txt")
+```
