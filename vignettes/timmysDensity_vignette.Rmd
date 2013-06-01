@@ -78,8 +78,6 @@ For each dissemination area (DA), we are going to use as the location for the qu
 
 Because Foursquare limits the number of userless requests to [5000 / hr](https://developer.foursquare.com/overview/ratelimits). To make sure we stay under this limit, we will divide up the data into **blocks** of 5000.
 
-```{r splitBlocks}
-totBlocks <- rep(seq(1, 5000, 1), 12)[seq(1, nrow(areaData), 1)]
-areaData$block <- totBlocks
-save(areaData, file="../timmysData/areaDataFile.RData")
+```{r runQueries}
+runQueries(areaData, idFile="../timmysData/clientid.txt", secretFile="../timmysData/clientsecret.txt", outFile="../timmysData/timmysLocs2.txt")
 ```
