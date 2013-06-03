@@ -106,3 +106,5 @@ cleanUpResults <- function(inLocFile="timmysLocs.txt"){
   allLocs <- unique(allLocs)
   cat(allLocs, file=inLocFile, sep="\n", append=F)
 }
+
+

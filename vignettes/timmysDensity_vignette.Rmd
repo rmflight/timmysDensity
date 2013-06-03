@@ -5,8 +5,8 @@
 
 ```{r dataOpts}
 options(stringsAsFactors=F)
-require(plyr)
 require(timmysDensity)
+require(plyr)
 require(maps)
 require(ggplot2)
 require(geosphere)
@@ -59,18 +59,18 @@ summarizeArea <- function(areaID){
   outData <- data.frame(uid=areaID, lamx=areaData[1,"DAlamx"], lamy=areaData[1,"DAlamy"], lat=areaData[1,"DAlat"], long=areaData[1,"DAlong"], pop=sum(areaData[,"DBpop2011"]), dwell=sum(areaData[,"DBtdwell2011"]), prov=areaData[1, "PRename"])
   return(outData)
 }
-areaData <- adply(uniqAreas[1:5], 1, summarizeArea)
+areaData <- adply(uniqAreas, 1, summarizeArea)
 .sessionInfo <- sessionInfo()
 .timedate <- Sys.time()
-write.table(areaData, file="inst/data/areaData.txt", sep="\t", row.names=F, col.names=T)
-save(areaData, .sessionInfo, .timedate, file="../timmysData/areaDataFile.RData")
+write.table(areaData, file="../timmysData/areaData.txt", sep="\t", row.names=F, col.names=T)
+save(areaData, .sessionInfo, .timedate, file="../timmysData/areaDataFile.RData", compress="xz")
 ```
 
 ## Run queries on Foursquare
 
 ### Load up the data and verify what we have.
 
-```{r generateQueries}
+```{r generateQueries, eval=FALSE}
 load("../timmysData/areaDataFile.RData")
 head(areaData)
 ```
@@ -82,7 +82,7 @@ For each dissemination area (DA), we are going to use as the location for the qu
 
 Because Foursquare limits the number of userless requests to [5000 / hr](https://developer.foursquare.com/overview/ratelimits). To make sure we stay under this limit, we will divide up the data into **blocks** of 5000.
 
-```{r runQueries}
+```{r runQueries, eval=FALSE}
 runQueries(areaData, idFile="../timmysData/clientid.txt", secretFile="../timmysData/clientsecret.txt", outFile="../timmysData/timmysLocs2.txt")
 ```
 
@@ -91,7 +91,7 @@ runQueries(areaData, idFile="../timmysData/clientid.txt", secretFile="../timmysD
 
 Due to the small size of the DAs, we have a lot of duplicate entries. Now lets remove all the duplicate entries.
 
-```{r cleanup}
+```{r cleanup, eval=FALSE}
 cleanUpResults("../timmysData/timmysLocs2.txt")
 ```
 
@@ -100,7 +100,7 @@ cleanUpResults("../timmysData/timmysLocs2.txt")
 
 First lets read in the data and make sure that we have Tims locations.
 
-```{r readTimsLocs}
+```{r readTimsLocs, eval=FALSE}
 # read in and clean up the data
 timsLocs <- scan(file="../timmysData/timmysLocs2.txt", what=character(), sep="\n")
 timsLocs <- strsplit(timsLocs, ":")
@@ -120,11 +120,16 @@ hasTims <- (grepl(timsStr[1], locData$description, ignore.case=T)) | (grepl(tims
 locData <- locData[hasTims,]
 timsLocs <- locData
 rm(timsName, timsLat, timsLong, hasNA, locData, hasTims, timsStr)
+.timedate <- Sys.time()
+.sessionInfo <- sessionInfo()
+save(timsLocs, .timedate, .sessionInfo, file="../timmysData/timsLocs.RData", compress="xz")
 ```
 
 Lets actually put these on a map.
 
 ```{r mapIt}
+data(timsLocs)
+data(areaDataFile)
 canada <- map_data("world", "canada")
 
 p <- ggplot(legend=FALSE) +
@@ -140,6 +145,31 @@ sp <- timsLocs[1, c("lat", "long")]
 
 p2 <- p + geom_point(data=timsLocs[,c("lat", "long")], aes(x=long, y=lat), colour="green", size=1, alpha=0.5)
 
-print(p)
 print(p2)
 ```
+
+And now lets also determine how far particular percentages of the population are from a Timmys.
+
+```{r maxDistance}
+queryLocs <- matrix(c(timsLocs$long, timsLocs$lat), nrow=nrow(timsLocs), ncol=2, byrow=F) # these are the tims locations
+distLocs <- matrix(c(areaData$long, areaData$lat), nrow=nrow(areaData), ncol=2, byrow=F) # the census centers
+allDists <- apply(queryLocs, 1, function(x){
+  min(distHaversine(x, distLocs)) # only need the minimum value to determine 
+})
+```
+
+From the `allDists` variable above, we can determine that the maximum distance any census dissemination area (DA) is from a Tim Hortons is 51.5 km (`r 51.5*0.621` miles). This is based on distances calculated "as the crow flies", but still, that is pretty close. Assuming roads, the furthest a Canadian should have to travel is less than an hour to get their Timmys fix. 
+
+```{r percPopulation}
+totPopulation <- sum(areaData$pop, na.rm=T)
+lessDist <- seq(50, 51.6 * 1000, 50) # distances are in meters, so multiply by 1000 to get reasonable km
+
+percPop <- sapply(lessDist, function(inDist){
+  isLess <- allDists < inDist
+  sum(areaData$pop[isLess], na.rm=T) / totPopulation * 100
+})
+
+plotDistPerc <- data.frame(distance=lessDist, population=percPop, logDist=log10(lessDist))
+ggplot(plotDistPerc, aes(x=logDist, y=population)) + geom_point()
+```
+
