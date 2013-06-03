@@ -170,6 +170,7 @@ percPop <- sapply(lessDist, function(inDist){
 })
 
 plotDistPerc <- data.frame(distance=lessDist, population=percPop, logDist=log10(lessDist))
-ggplot(plotDistPerc, aes(x=logDist, y=population)) + geom_point()
+ggplot(plotDistPerc, aes(x=distance, y=population)) + geom_point() + coord_trans(xtrans="log10")
 ```
 
+What gets really interesting, is how much of the population lives within a given distance of a Timmys. By summing up the percentage of the population for 
