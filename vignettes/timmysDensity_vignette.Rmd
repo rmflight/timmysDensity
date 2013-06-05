@@ -179,12 +179,26 @@ What gets really interesting, is how much of the population lives within a given
 
 I guess Canadians really do like their Tim Hortons Coffee (and donuts!).
 
-All of the necessary processed data and code is available in the `R` package [`timmysDensity`](https://github.com/rmflight/timmysDensity). You can install it using `devtools`.
+## Replication
+
+All of the necessary processed data and code is available in the `R` package [`timmysDensity`](https://github.com/rmflight/timmysDensity). You can install it using `devtools`. The original data files are linked in the relevant sections above.
 
 ```{r installPackage, eval=FALSE}
 library(devtools)
 install_github('timmysDensity', 'rmflight')
 ```
+
+### Caveats
+
+I originally did this work based on a different set of data, that I have not been able to locate the original source for. I have not compared these results to that data to verify their accuracy. When I do so, I will update the package, vignette and blog post.
+
+## Posted
+
+This work exists as the vignette of [`timmysDensity`](https://github.com/rmflight/timmysDensity), on my [web-blog](http://robertmflight.blogspot.com/2013/06/tim-hortons-density.html), and independently as the front page for the [GitHub repo](rmflight.github.io/timmysDensity).
+
+## Disclaimer
+
+Tim Hortons was not involved in the creation or preparation of this work. I am not regularly updating the location information obtained from Foursquare, it is only valid for May 31, 2013. All code used in preparing these results was written by me, except in the case where code from other `R` packages was used. All opinions and conclusions are my own, and do not reflect the views of anyone else or any institution I may be associated with.
 
 ## Other information when this vignette was generated
 
