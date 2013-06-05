@@ -3,7 +3,13 @@
 %\VignetteIndexEntry{Tim Horton's Density in Canada}
 -->
 
-```{r dataOpts}
+# Tim Hortons Density
+
+Inspired by this [post](http://www.ifweassume.com/2012/10/the-united-states-of-starbucks.html), I wanted to examine the locations and density of Tim Hortons restaurants in Canada. Using Stats Canada data, each census tract is queried on Foursquare for Tims locations.
+
+## Setup
+
+```{r dataOpts, message=FALSE}
 options(stringsAsFactors=F)
 require(timmysDensity)
 require(plyr)
@@ -11,11 +17,6 @@ require(maps)
 require(ggplot2)
 require(geosphere)
 ```
-
-
-# Tim Hortons Density
-
-Inspired by this [post](), I wanted to examine the locations and density of Tim Hortons restaurants in Canada. Using Stats Canada data, each census tract is queried on Foursquare for Tims locations.
 
 ## Statistics Canada Census Data
 
@@ -80,7 +81,7 @@ head(areaData)
 
 For each dissemination area (DA), we are going to use as the location for the query the latitude and longitude of each DA, as well as the search string "tim horton". 
 
-Because Foursquare limits the number of userless requests to [5000 / hr](https://developer.foursquare.com/overview/ratelimits). To make sure we stay under this limit, we will divide up the data into **blocks** of 5000.
+Because Foursquare limits the number of userless requests to [5000 / hr](https://developer.foursquare.com/overview/ratelimits). To make sure we stay under this limit, the `runQueries` function will only 5000 queries an hour.
 
 ```{r runQueries, eval=FALSE}
 runQueries(areaData, idFile="../timmysData/clientid.txt", secretFile="../timmysData/clientsecret.txt", outFile="../timmysData/timmysLocs2.txt")
@@ -96,7 +97,7 @@ cleanUpResults("../timmysData/timmysLocs2.txt")
 ```
 
 
-### Visualize Locations
+## Visualize Locations
 
 First lets read in the data and make sure that we have Tims locations.
 
@@ -125,7 +126,7 @@ rm(timsName, timsLat, timsLong, hasNA, locData, hasTims, timsStr)
 save(timsLocs, .timedate, .sessionInfo, file="../timmysData/timsLocs.RData", compress="xz")
 ```
 
-Lets actually put these on a map.
+### Put them on a map
 
 ```{r mapIt}
 data(timsLocs)
@@ -148,7 +149,9 @@ p2 <- p + geom_point(data=timsLocs[,c("lat", "long")], aes(x=long, y=lat), colou
 print(p2)
 ```
 
-And now lets also determine how far particular percentages of the population are from a Timmys.
+### How far??
+
+And now lets also calculate the minimum distance of a given DA from Timmys locations.
 
 ```{r maxDistance}
 queryLocs <- matrix(c(timsLocs$long, timsLocs$lat), nrow=nrow(timsLocs), ncol=2, byrow=F) # these are the tims locations
@@ -170,6 +173,42 @@ percPop <- sapply(lessDist, function(inDist){
 })
 
 plotDistPerc <- data.frame(distance=lessDist, population=percPop, logDist=log10(lessDist))
-ggplot(plotDistPerc, aes(x=logDist, y=population)) + geom_point()
+ggplot(plotDistPerc, aes(x=logDist, y=population)) + geom_point() + xlab("Log10 Distance") + ylab("% Population")
 ```
 
+What gets really interesting, is how much of the population lives within a given distance of a Timmys. By summing up the percentage of the population within given distances. The plot above shows that 50% of the population is within `r 10^2.5` **meters** of a Tim Hortons location. 
+
+I guess Canadians really do like their Tim Hortons Coffee (and donuts!).
+
+## Replication
+
+All of the necessary processed data and code is available in the `R` package [`timmysDensity`](https://github.com/rmflight/timmysDensity). You can install it using `devtools`. The original data files are linked in the relevant sections above.
+
+```{r installPackage, eval=FALSE}
+library(devtools)
+install_github('timmysDensity', 'rmflight')
+```
+
+### Caveats
+
+I originally did this work based on a different set of data, that I have not been able to locate the original source for. I have not compared these results to that data to verify their accuracy. When I do so, I will update the package, vignette and blog post.
+
+## Posted
+
+This work exists as the vignette of [`timmysDensity`](https://github.com/rmflight/timmysDensity), on my [web-blog](http://robertmflight.blogspot.com/2013/06/tim-hortons-density.html), and independently as the front page for the [GitHub repo](rmflight.github.io/timmysDensity).
+
+## Disclaimer
+
+Tim Hortons was not involved in the creation or preparation of this work. I am not regularly updating the location information obtained from Foursquare, it is only valid for May 31, 2013. All code used in preparing these results was written by me, except in the case where code from other `R` packages was used. All opinions and conclusions are my own, and do not reflect the views of anyone else or any institution I may be associated with.
+
+## Other information when this vignette was generated
+
+### Session Info
+```{r sessionInfo}
+sessionInfo()
+```
+
+### Time and Date
+```{r timeDate}
+Sys.time()
+```

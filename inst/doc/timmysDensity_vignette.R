@@ -1,5 +1,5 @@
 
-## @knitr dataOpts
+## @knitr dataOpts, message=FALSE
 options(stringsAsFactors=F)
 require(timmysDensity)
 require(plyr)
@@ -112,6 +112,19 @@ percPop <- sapply(lessDist, function(inDist){
 })
 
 plotDistPerc <- data.frame(distance=lessDist, population=percPop, logDist=log10(lessDist))
-ggplot(plotDistPerc, aes(x=logDist, y=population)) + geom_point()
+ggplot(plotDistPerc, aes(x=logDist, y=population)) + geom_point() + xlab("Log10 Distance") + ylab("% Population")
+
+
+## @knitr installPackage, eval=FALSE
+## library(devtools)
+## install_github('timmysDensity', 'rmflight')
+
+
+## @knitr sessionInfo
+sessionInfo()
+
+
+## @knitr timeDate
+Sys.time()
 
 
