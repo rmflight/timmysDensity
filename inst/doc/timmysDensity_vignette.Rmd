@@ -195,7 +195,7 @@ I originally did this work based on a different set of data, that I have not bee
 
 ## Posted
 
-This work exists as the vignette of [`timmysDensity`](https://github.com/rmflight/timmysDensity), on my [web-blog](http://robertmflight.blogspot.com/2013/06/tim-hortons-density.html), and independently as the front page for the [GitHub repo](rmflight.github.io/timmysDensity).
+This work exists as the vignette of [`timmysDensity`](https://github.com/rmflight/timmysDensity), on my [web-blog](http://robertmflight.blogspot.com/2013/06/tim-hortons-density.html), and independently as the front page for the [GitHub repo](https://rmflight.github.io/timmysDensity).
 
 ## Disclaimer
 
