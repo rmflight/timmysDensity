@@ -3,6 +3,12 @@
 %\VignetteIndexEntry{Tim Horton's Density in Canada}
 -->
 
+# Tim Hortons Density
+
+Inspired by this [post](http://www.ifweassume.com/2012/10/the-united-states-of-starbucks.html), I wanted to examine the locations and density of Tim Hortons restaurants in Canada. Using Stats Canada data, each census tract is queried on Foursquare for Tims locations.
+
+## Setup
+
 ```{r dataOpts, message=FALSE}
 options(stringsAsFactors=F)
 require(timmysDensity)
@@ -11,11 +17,6 @@ require(maps)
 require(ggplot2)
 require(geosphere)
 ```
-
-
-# Tim Hortons Density
-
-Inspired by this [post](http://www.ifweassume.com/2012/10/the-united-states-of-starbucks.html), I wanted to examine the locations and density of Tim Hortons restaurants in Canada. Using Stats Canada data, each census tract is queried on Foursquare for Tims locations.
 
 ## Statistics Canada Census Data
 
