@@ -11,11 +11,12 @@ Inspired by this [post](http://www.ifweassume.com/2012/10/the-united-states-of-s
 
 ```{r dataOpts, message=FALSE}
 options(stringsAsFactors=F)
-require(timmysDensity)
-require(plyr)
-require(maps)
-require(ggplot2)
-require(geosphere)
+library(timmysDensity)
+library(plyr)
+library(maps)
+library(ggplot2)
+library(geosphere)
+library(parallel)
 ```
 
 ## Statistics Canada Census Data
@@ -60,19 +61,20 @@ summarizeArea <- function(areaID){
   outData <- data.frame(uid=areaID, lamx=areaData[1,"DAlamx"], lamy=areaData[1,"DAlamy"], lat=areaData[1,"DAlat"], long=areaData[1,"DAlong"], pop=sum(areaData[,"DBpop2011"]), dwell=sum(areaData[,"DBtdwell2011"]), prov=areaData[1, "PRename"])
   return(outData)
 }
-areaData <- adply(uniqAreas, 1, summarizeArea)
+areaData <- mclapply(uniqAreas, summarizeArea, mc.cores = 6)
+areaData <- do.call(rbind, areaData)
 .sessionInfo <- sessionInfo()
 .timedate <- Sys.time()
-write.table(areaData, file="../timmysData/areaData.txt", sep="\t", row.names=F, col.names=T)
-save(areaData, .sessionInfo, .timedate, file="../timmysData/areaDataFile.RData", compress="xz")
+write.table(areaData, file="inst/extdata/areaData.txt", sep="\t", row.names=F, col.names=T)
+save(areaData, .sessionInfo, .timedate, file="data/areaDataFile.RData", compress="xz")
 ```
 
 ## Run queries on Foursquare
 
 ### Load up the data and verify what we have.
 
-```{r generateQueries, eval=FALSE}
-load("../timmysData/areaDataFile.RData")
+```{r generateQueries}
+data(areaDataFile)
 head(areaData)
 ```
 
